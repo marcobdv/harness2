@@ -144,8 +144,8 @@ class ClaudeCellTests(unittest.TestCase):
         self.assertTrue(HT.is_tree(CLAUDE_SURFACE, base))
         HT.validate(CLAUDE_SURFACE, HT.read_tree(CLAUDE_SURFACE, base))
         self.assertEqual(make_adapter("jb", None, "cc").substrate.name, "cc")
-        with self.assertRaisesRegex(ValueError, "jb only"):
-            make_adapter("lab", None, "cc")
+        with self.assertRaisesRegex(ValueError, "wired for jb, lab only"):
+            make_adapter("wb", "office", "cc")
 
     def test_validate_models_for_claude_executor(self):
         with (

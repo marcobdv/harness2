@@ -143,7 +143,8 @@ Codex runs with its sandbox disabled. Review the
 ## Claude Code executor
 
 `--substrate cc` runs each rollout with the Claude Code CLI (`claude -p`). It is
-wired for JobBench so far. Install the CLI with
+wired for JobBench and LAB; WorkBuddy, which runs its agents inside Docker, is
+not supported yet. Install the CLI with
 `npm install -g @anthropic-ai/claude-code` (or point `HARNESS2_CLAUDE_BIN` at
 it), then choose the provider and models:
 
@@ -173,9 +174,12 @@ therefore not used, and auth must come from the environment.
 The editable harness maps onto Claude Code as follows: `CLAUDE.md` (system
 prompt, guardrails, memory, tool guidance), `.claude/skills/<name>/SKILL.md`,
 `sub_agents/<name>/AGENT.md` (installed as `.claude/agents/<name>.md`),
-`scripts/*.py`, and hooks in `.claude/settings.json`. The JobBench base harness
-is `harness2/benchmarks/jb_claude_base/CLAUDE.md`, the same instruction as the
-Codex baseline.
+`scripts/*.py`, and hooks in `.claude/settings.json`. Each base harness uses
+the same text as its Codex baseline, so the two compare directly: JobBench's is
+`harness2/benchmarks/jb_claude_base/CLAUDE.md`, and LAB's is the Codex
+`AGENTS.md` body written as `CLAUDE.md`. LAB rollouts get the runtime
+`scripts/read_doc.py`, and a LAB harness must keep its `output/` and
+`read_doc.py` rules in `CLAUDE.md`, as on Codex.
 
 ## Network access during setup
 

@@ -37,8 +37,8 @@ def main(argv=None):
     args = p.parse_args(argv)
     if args.subset and args.benchmark != "wb":
         p.error("--subset only applies to wb")
-    if args.substrate == "cc" and args.benchmark != "jb":
-        p.error("--substrate cc is wired for jb only so far")
+    if args.substrate == "cc" and args.benchmark == "wb":
+        p.error("--substrate cc is wired for jb and lab only so far")
     dry = args.dry_run
     missing = install.missing_runners()
     if missing and not dry:
