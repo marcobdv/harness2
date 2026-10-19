@@ -140,6 +140,43 @@ changing either. `harness2-check` reports stale configuration until then.
 Codex runs with its sandbox disabled. Review the
 [executor network restrictions](EXPERIMENTS.md#web-access) before evaluation.
 
+## Claude Code executor
+
+`--substrate cc` runs each rollout with the Claude Code CLI (`claude -p`). It is
+wired for JobBench so far. Install the CLI with
+`npm install -g @anthropic-ai/claude-code` (or point `HARNESS2_CLAUDE_BIN` at
+it), then choose the provider and models:
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `HARNESS2_CLAUDE_MODEL` | `claude-sonnet-5-5` | Executor model |
+| `HARNESS2_CLAUDE_EFFORT` | `high` | `--effort` for each rollout |
+| `HARNESS2_CLAUDE_AUTH` | `vertex` when `GOOGLE_CLOUD_PROJECT` is set, else `anthropic` | `anthropic` uses `ANTHROPIC_API_KEY`; `vertex` uses Claude on Vertex AI |
+| `HARNESS2_IMPROVER_CHANNEL` | `opencode` | Set `claude_cli` to run the improver on Claude Code too |
+| `HARNESS2_IMPROVER_MODEL` | `HARNESS2_SOLVER_MODEL` | A bare Anthropic id such as `claude-opus-5-5` for `claude_cli` |
+
+For an all-Claude setup:
+
+```bash
+export ANTHROPIC_API_KEY=...            # or HARNESS2_CLAUDE_AUTH=vertex
+export HARNESS2_IMPROVER_CHANNEL=claude_cli HARNESS2_IMPROVER_MODEL=claude-opus-5-5
+harness2-setup jb --substrate cc
+harness2-check --bench jb --substrate cc
+harness2 --bench jb --substrate cc --k 1 --mode parallel --max-tasks 1
+```
+
+Each rollout runs in a fresh `CLAUDE_CONFIG_DIR` with `--setting-sources
+project`, so your own `~/.claude` memory, skills, agents, plugins and settings
+never enter it; only the harness under test does. A stored `claude` login is
+therefore not used, and auth must come from the environment.
+
+The editable harness maps onto Claude Code as follows: `CLAUDE.md` (system
+prompt, guardrails, memory, tool guidance), `.claude/skills/<name>/SKILL.md`,
+`sub_agents/<name>/AGENT.md` (installed as `.claude/agents/<name>.md`),
+`scripts/*.py`, and hooks in `.claude/settings.json`. The JobBench base harness
+is `harness2/benchmarks/jb_claude_base/CLAUDE.md`, the same instruction as the
+Codex baseline.
+
 ## Network access during setup
 
 Setup downloads dependencies from the following hosts:

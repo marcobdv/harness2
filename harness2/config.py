@@ -162,6 +162,25 @@ CODEX_CONTAINER_URL = env("HARNESS2_CODEX_CONTAINER_URL", CODEX_BASE_URL)
 VERTEX_PROXY_KEY = env("HARNESS2_CODEX_API_KEY", "")
 CODEX_HOME_DIR = DEPENDENCIES / "codex" / "home"
 
+CLAUDE_BIN = env("HARNESS2_CLAUDE_BIN", "claude")
+SOLVER_MODEL_CC = env("HARNESS2_CLAUDE_MODEL", "claude-sonnet-5-5")
+CLAUDE_EFFORT = env("HARNESS2_CLAUDE_EFFORT", "high")
+CLAUDE_AUTH = env("HARNESS2_CLAUDE_AUTH", "vertex" if VERTEX_PROJECT else "anthropic")
+if CLAUDE_AUTH not in ("vertex", "anthropic"):
+    raise ConfigError(f"HARNESS2_CLAUDE_AUTH must be 'vertex' or 'anthropic', got {CLAUDE_AUTH!r}")
+
+
+def claude_auth_env() -> dict[str, str]:
+    """Environment that routes a Claude Code process to the configured provider."""
+    if CLAUDE_AUTH == "vertex":
+        return {
+            "CLAUDE_CODE_USE_VERTEX": "1",
+            "ANTHROPIC_VERTEX_PROJECT_ID": VERTEX_PROJECT,
+            "CLOUD_ML_REGION": VERTEX_REGION,
+        }
+    return {}
+
+
 WB_SOLVER_MODEL = "harness2/solver"
 WB_WEB_JUDGE = "harness2/judge"
 WB_RENDER_PY = sys.executable
@@ -171,17 +190,32 @@ WB_MAX_JOBS = {"oc": 1, "cx": 1}
 WB_MAX_TRIALS = {"oc": 2, "cx": 2}
 WB_MODEL_CONNECTION = "local_proxy"
 
-DEFAULT_PROPOSER_CHANNEL = "opencode"
+DEFAULT_PROPOSER_CHANNEL = env("HARNESS2_IMPROVER_CHANNEL", "opencode")
 PROPOSER_MODEL_BY_CHANNEL = {"opencode": IMPROVER_MODEL, "claude_cli": IMPROVER_MODEL}
 PHASE_WIDTH = 2
 TRANSPORT_ATTEMPTS = 2
 PROPOSER_CONCURRENCY = 2
 
 
-def validate_models(*, judge: bool = False) -> None:
-    require("HARNESS2_SOLVER_MODEL", needed_by="executor rollouts")
-    if "/" not in SOLVER_MODEL_OC or "/" not in IMPROVER_MODEL:
-        raise ConfigError("Executor and improver models must use OpenCode's provider/model syntax")
+def validate_models(*, judge: bool = False, substrate: str = "oc") -> None:
+    if substrate == "cc":
+        # The executor is Claude Code (SOLVER_MODEL_CC); only the improver needs a model here.
+        require("HARNESS2_IMPROVER_MODEL", needed_by="improver sessions")
+        bare = DEFAULT_PROPOSER_CHANNEL == "claude_cli"
+        if bare == ("/" in IMPROVER_MODEL):
+            raise ConfigError(
+                f"HARNESS2_IMPROVER_MODEL {IMPROVER_MODEL!r} does not fit improver channel "
+                f"{DEFAULT_PROPOSER_CHANNEL!r}: claude_cli takes a bare Anthropic id, "
+                f"opencode a provider/model id"
+            )
+        if CLAUDE_AUTH == "vertex" and not VERTEX_PROJECT:
+            raise ConfigError("Set GOOGLE_CLOUD_PROJECT for Claude Code on Vertex AI")
+    else:
+        require("HARNESS2_SOLVER_MODEL", needed_by="executor rollouts")
+        if "/" not in SOLVER_MODEL_OC or "/" not in IMPROVER_MODEL:
+            raise ConfigError(
+                "Executor and improver models must use OpenCode's provider/model syntax"
+            )
     if any(m.startswith("google-vertex") for m in (SOLVER_MODEL_OC, IMPROVER_MODEL)):
         if not VERTEX_PROJECT:
             raise ConfigError("Set GOOGLE_CLOUD_PROJECT for Vertex AI")

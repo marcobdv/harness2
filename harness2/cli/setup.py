@@ -32,11 +32,13 @@ def main(argv=None):
         default=None,
         help="wb only: one subset to install; omitted installs office, web, and code",
     )
-    p.add_argument("--substrate", choices=("oc", "cx"), default="oc")
+    p.add_argument("--substrate", choices=("oc", "cx", "cc"), default="oc")
     p.add_argument("--dry-run", action="store_true")
     args = p.parse_args(argv)
     if args.subset and args.benchmark != "wb":
         p.error("--subset only applies to wb")
+    if args.substrate == "cc" and args.benchmark != "jb":
+        p.error("--substrate cc is wired for jb only so far")
     dry = args.dry_run
     missing = install.missing_runners()
     if missing and not dry:
@@ -106,6 +108,11 @@ def main(argv=None):
                 )
         if args.substrate == "cx":
             install.codex(dry_run=dry)
+        if args.substrate == "cc" and not dry and not shutil.which(config.CLAUDE_BIN):
+            raise RuntimeError(
+                "Claude Code CLI not found; npm install -g @anthropic-ai/claude-code "
+                "(or set HARNESS2_CLAUDE_BIN)"
+            )
     except (OSError, RuntimeError, ValueError, subprocess.CalledProcessError) as exc:
         p.exit(1, f"setup failed: {exc}\n")
     print(

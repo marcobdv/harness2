@@ -44,8 +44,8 @@ harnesses, with gains of up to 11.5 points on WorkBuddy-Bench, 4.5 points on
 JobBench, and 11.8 percentage points on LAB's partial pass rate. Increasing the
 task-level recursion budget brings further gains.
 
-The release supports **parallel and sequential recursion**, **OpenCode and
-Codex executors**, and **JobBench, LAB, and WorkBuddy-Bench**.
+The release supports **parallel and sequential recursion**, **OpenCode and Codex
+executors** (plus **Claude Code** on JobBench), and **JobBench, LAB, and WorkBuddy-Bench**.
 
 ## Video overview
 
@@ -157,6 +157,7 @@ through successive Propose–Probe–Compose steps.
 | `--k K --mode parallel` | Probe `K` general and `K` domain-specific candidates, then produce `K` compositions |
 | `--k K --mode sequential` | Refine the harness through `K` successive steps |
 | `--substrate cx` | Use Codex instead of the default OpenCode executor |
+| `--substrate cc` | Use Claude Code as the executor (JobBench); see the [setup guide](docs/SETUP.md#claude-code-executor) |
 
 After each task, harnessing-level recursion retains the adopted harness and
 evidence-supported lessons to guide future refinement. See the

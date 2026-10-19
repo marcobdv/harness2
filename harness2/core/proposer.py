@@ -103,8 +103,12 @@ class Proposer:
             raise ValueError("Set HARNESS2_IMPROVER_MODEL before starting model sessions")
 
     def env(self) -> dict[str, str]:
-        e = {k: v for k, v in os.environ.items() if k not in _DROP_ENV}
-        if self.spec.kind == "claude_cli":
+        direct = self.spec.kind == "claude_cli" and config.CLAUDE_AUTH == "anthropic"
+        e = {k: v for k, v in os.environ.items() if direct or k not in _DROP_ENV}
+        if direct:
+            e.pop("CLAUDECODE", None)
+            e["ANTHROPIC_MODEL"] = self.spec.model
+        elif self.spec.kind == "claude_cli":
             e.update(
                 {
                     "CLAUDE_CODE_USE_VERTEX": "1",

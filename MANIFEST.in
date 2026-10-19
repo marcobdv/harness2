@@ -2,6 +2,7 @@ include README.md .env.example
 recursive-include docs *.md
 recursive-include scripts *.py *.sh
 recursive-include harness2/third_party *
+recursive-include harness2/benchmarks/jb_claude_base *.md
 include dependencies/README.md dependencies/PINNED.md
 global-exclude __pycache__ *.py[cod] *.log
 
